@@ -1,0 +1,44 @@
+version: "3.5"
+x-logging:
+  &default-logging
+  driver: json-file
+  options:
+    max-size: '5m'
+    max-file: '5'
+x-sysctls:
+  &default-sysctls
+  - net.core.somaxconn=1024
+x-ulimits:
+  &default-ulimits
+  nproc: 65535
+  nofile:
+    soft: 20000
+    hard: 40000
+
+services:
+  kurento:
+    image: kurento/kurento-media-server:6.13.0
+    network_mode: bridge
+    ports:
+      - 8888:8888
+    # volumes:
+    #   - $PWD/WebRtcEndpoint.conf.ini:/etc/kurento/modules/kurento/WebRtcEndpoint.conf.ini
+    restart: always
+    logging: *default-logging
+    sysctls: *default-sysctls
+    ulimits: *default-ulimits
+
+  coturn:
+    image: kurento/coturn
+    container_name: coturn
+    network_mode: bridge
+    ports:
+      - 3478:3478
+      - 3478:3478/udp
+      - 49190-49200:49190-49200/udp
+    volumes:
+      - $PWD/turnserver.conf:/etc/turnserver.conf
+    restart: always
+    logging: *default-logging
+    sysctls: *default-sysctls
+    ulimits: *default-ulimits
